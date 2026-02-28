@@ -94,6 +94,21 @@ bash build.sh --genop=moe/my_custom_moe_op
 bash build.sh --genop=ffn/my_custom_ffn_op
 ```
 
+### Creating a new Attention operator
+```bash
+bash build.sh --genop=attention/my_custom_attention_op
+```
+
+### Creating a new MC2 operator
+```bash
+bash build.sh --genop=mc2/my_custom_mc2_op
+```
+
+### Creating a <New Class> operator
+```bash
+bash build.sh --genop=new_class/my_custom_new_class_op
+```
+
 ## Troubleshooting
 
 ### Common Issues
