@@ -33,19 +33,15 @@ dmidecode -t system 2>/dev/null | head -20 | grep Product
 
 # Method 2: Check product information via npu-smi
 npu-smi info -t product -i 0 -c 0
-
-# Method 3: Using ipmitool (if available)
-ipmitool fru 2>/dev/null | grep "Product Name" | head -1
 ```
 
 ### Platform Mapping Reference
 
-| Chip Name | Possible Server Platforms | Notes |
-|-----------|---------------------------|-------|
-| Ascend 910A2 | Atlas A2 | A2-specific chip |
-| Ascend 910B1 | Atlas A2, Atlas A3 | Cross-platform |
-| Ascend 910B2 | Atlas A2, Atlas A3 | Cross-platform |
-| Ascend 910B3 | Atlas A2, Atlas A3 | Cross-platform |
+| Chip Name | Server Platform |
+|-----------|-----------------|
+| Ascend 910B | Atlas A2 |
+| Ascend 910C | Atlas A3 |
+| Ascend 950 | Atlas A5 |
 
 ### Key Takeaway
 
