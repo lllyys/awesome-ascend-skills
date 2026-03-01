@@ -36,3 +36,4 @@ Skills 会自动从以下位置加载：
 
 - [Awesome Ascend Skills](../README.md) - 华为昇腾 NPU Skills 仓库
 - [skill-creator](./skills/skill-creator/SKILL.md) - Skill 创建指南
+- [create-pr](./skills/create-pr/SKILL.md) - 创建 PR 指南
