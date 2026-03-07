@@ -11,7 +11,8 @@ Reading guide:
 | File | Topic |
 | --- | --- |
 | [reference.md](reference.md) | Version matrix (op-plugin branch ↔ torch_npu), SOC_VERSION setup, common links |
-| [examples.md](examples.md) | Generic steps to add a new custom operator (Pattern A/B) |
+| [examples.md](examples.md) | Generic steps to add a new custom operator (Pattern A/B/C) |
+| [case_study_moe.md](case_study_moe.md) | Pattern C case study: moe_init_routing_grouped_matmul_grad (xpu_kernel) |
 
 > Compatibility: the repo root keeps `examples.md` / `reference.md` as redirect pages to avoid broken links.
 

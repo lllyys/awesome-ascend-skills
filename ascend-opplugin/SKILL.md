@@ -1,11 +1,11 @@
 ---
 name: ascend-opplugin
-description: Installs op-plugin (torch_npu operator plugin) environment and guides custom NPU operator integration with PyTorch via two generic patterns (no workspace vs workspace+tiling), from kernel implementation through host registration, build, and test. Use when working with op-plugin, operator integration, torch_npu custom ops, Ascend C, NPU operators, cpp_extension, or running custom operators on NPU.
+description: Installs op-plugin (torch_npu operator plugin) environment and guides custom NPU operator integration with PyTorch via three patterns (A: no workspace, B: workspace+tiling, C: OpCommand reuse). Covers kernel implementation, host registration, build, and test. Use when working with op-plugin, operator integration, torch_npu custom ops, Ascend C, NPU operators, cpp_extension, xpu_kernel, or running custom operators on NPU.
 ---
 
 # op-plugin
 
-Guides installing the op-plugin environment and **generic** custom-operator integration for torch_npu. Two reference examples (add, matmul_leakyrelu) define two patterns; all new operators follow one of these patterns. **Generalization is the priority.**
+Guides installing the op-plugin environment and **generic** custom-operator integration for torch_npu. Three patterns: A (add), B (matmul_leakyrelu), C (OpCommand reuse for CANN/xpu_kernel ops). All new operators follow one of these patterns. **Generalization is the priority.**
 
 ## 0. Quick pre-check and branch selection
 
@@ -55,17 +55,18 @@ This step should be **idempotent**: prefer reusing existing environment; rebuild
 
 Dependencies: torch_npu, CANN. Prefer the torch_npu Docker image for build. Version matrix (op-plugin branch ↔ PyTorch/Python/GCC) is in [references/reference.md](references/reference.md).
 
-## 2. Integration mode selection: whether the CANN operator already exists
+## 2. Integration mode selection: whether the operator already exists
 
-**New-operator flow (updated):** First check **whether the operator already exists in CANN/ops-nn** → if reusable, prefer Pattern C (OpCommand direct call to CANN graph ops) → otherwise choose Pattern A or Pattern B and implement your own AscendC kernel.
+**New-operator flow:** First check **whether the operator already exists** (CANN/ops-nn built-in, or xpu_kernel/custom ops installed) → if reusable, prefer Pattern C (OpCommand) → otherwise choose Pattern A or Pattern B and implement your own AscendC kernel.
 
-- **If ops-nn already has a full implementation** (AscendC kernel, tiling, `op_graph/*.h`, `op_host/op_api/*.cpp`, e.g. `norm/layer_norm_v3`, `layer_norm_v4`):
+- **If the operator already has a full implementation** (CANN built-in like `layer_norm_v3`, or **xpu_kernel** / custom ops repo that you have built and installed):
   - No need to compile a new AscendC kernel;
-  - Add a thin host wrapper in your custom extension, call the existing graph operator name (e.g. `"LayerNormV3"` / `"LayerNormV4"`) via `at_npu::native::OpCommand`, and expose it as `torch.ops.npu.*`;
-  - CMake only links `torch_npu`, which handles ACL/CANN dependencies internally (avoid manually locating `libascendcl.so`, `libtiling_api.so`, etc.).
+  - Add a thin host wrapper in your custom extension, call the graph operator name via `at_npu::native::OpCommand`, and expose it as `torch.ops.npu.*`;
+  - CMake only links `torch_npu`; workspace/tiling are handled by the graph op internally.
+  - **For xpu_kernel ops:** The graph op name comes from `OP_ADD(OpClassName)` in `op_def`. Prerequisite: xpu_kernel must be built and installed so CANN can load the graph op at runtime.
 
-- **If the operator does not exist in CANN and you only have your own AscendC kernel:**
-  - Continue with the classic Pattern A / Pattern B approach: implement kernel + tiling + host wrapper yourself.
+- **If the operator does not exist and you only have your own AscendC kernel:**
+  - Continue with Pattern A or Pattern B: implement kernel + tiling + host wrapper yourself.
 
 Pattern A, B, and C can coexist in one project. Key principle: **reuse what the system already provides instead of reinventing the wheel**.
 
@@ -81,13 +82,15 @@ Pattern A, B, and C can coexist in one project. Key principle: **reuse what the 
 - **Host:** Allocate output, workspace tensor (size from platform or user), and optionally tiling tensor; call tiling generator if needed. Call `EXEC_KERNEL_CMD({kernel_name}, blockDim, input..., output, workspace[, tiling])`. Include `aclrtlaunch_{kernel_name}.h`.
 - **CMake:** `ascendc_library(workspace_kernel STATIC csrc/kernel/{kernel_name}_custom.cpp)` and `ascendc_compile_definitions(workspace_kernel PRIVATE -DHAVE_WORKSPACE -DHAVE_TILING)` (drop HAVE_TILING if not used). Add `csrc/host/tiling/*.cpp` to the host sources if tiling is implemented. Link workspace_kernel into the shared op-extension target.
 
-### Pattern C — Reuse existing CANN operators (OpCommand mode)
+### Pattern C — Reuse existing operators (OpCommand mode)
 
-When the target operator is already fully implemented in CANN/ops-nn (e.g. `ops-nn/norm/layer_norm_v3`, `layer_norm_v4`), use Pattern C:
+When the target operator is already fully implemented (CANN built-in or xpu_kernel/custom ops installed), use Pattern C:
 
-- **Approach:** Call the CANN graph operator name directly via `OpCommand`, without adding a new AscendC kernel.
+- **Approach:** Call the graph operator name directly via `OpCommand`, without adding a new AscendC kernel.
 
-- **Host layer example (LayerNormV3):**
+- **OpCommand Input/Output naming:** When the graph op has specific input/output names (from `op_def`), use the second parameter `descName` to match: `.Input(tensor, "inputGradY")`, `.Output(tensor, "outputGradX")`. This ensures correct mapping to the graph op.
+
+- **Host layer example (LayerNormV3, CANN built-in):**
   - PyTorch API design:
     - `torch.ops.npu.layer_norm_v3(x, gamma, beta, begin_norm_axis, begin_params_axis, eps) -> (y, mean, rstd)`
   - Implementation points:
@@ -134,13 +137,21 @@ When the target operator is already fully implemented in CANN/ops-nn (e.g. `ops-
     - `${TORCH_PATH}/include` and `torch/csrc/api/include`
     - `${ASCEND_CANN_PACKAGE_PATH}/include` (for `graph/types.h` and other dependencies)
 
+- **Pattern C for xpu_kernel / custom ops:**
+  - Graph op name: from `OP_ADD(OpClassName)` in `op_def` (e.g. `MoeInitRoutingGroupedMatmulGrad`).
+  - Input/output names: from `this->Input("inputGradY")`, `this->Output("outputGradX")` in `op_def`; pass as `.Input(t, "inputGradY")`, `.Output(t, "outputGradX")`.
+  - Output shape: compute in host from infer shape logic (e.g. `batch = expanded_row_idx.numel() / topk`); ensure it matches the op's infer shape.
+  - Prerequisite: xpu_kernel (or custom ops) must be built and installed; otherwise `OpCommand` will fail with "op not found".
+  - Reference: op-plugin `examples/moe_init_routing_grouped_matmul_grad_extension/`.
+
 - **Pitfalls (important):**
   - Use `int64_t` for integer `OpCommand::Attr` parameters; otherwise `OpAttrMaker::Set` may hit `bool`/`int64_t` overload ambiguity.
   - `normalized_shape` must be passed as `List[int]` from Python, not `Tensor`; use `IntArrayRef` on the C++ side.
   - Prefer `Tensor?` + empty `.Input()` for optional tensors instead of placeholder tensors.
   - If `aclnn_layer_norm*`-style C APIs exist, prefer calling the graph operator via `OpCommand` over manually using `aclTensorDesc`/`aclDataBuffer`/`aclnn*GetWorkspaceSize`.
+  - **setup.py:** Use `os.F_OK` and `os.X_OK`, not `os.path.F_OK` (which does not exist).
 
-Key takeaway: **First check if the operator already exists in CANN and op-plugin; if so, add only a PyTorch host wrapper.**
+Key takeaway: **First check if the operator already exists (CANN or xpu_kernel); if so, add only a PyTorch host wrapper.**
 
 ## 3. Kernel implementation (generic)
 
@@ -176,8 +187,9 @@ Key takeaway: **First check if the operator already exists in CANN and op-plugin
 
 ## 7. Necessary files and scripts (generic)
 
-Placeholders: `{pkg}` = Python package name, `{kernel_name}` = kernel entry name, `{op_name}` = PyTorch API name (**use the name you give for your operator**; e.g. if kernel is `add_custom`, then `{op_name}` is typically `add_custom`; keep naming consistent). Pattern A does not require workspace/tiling dirs; Pattern B requires workspace and optionally `csrc/host/tiling/` with tiling sources in CMake.
+Placeholders: `{pkg}` = Python package name, `{kernel_name}` = kernel entry name, `{op_name}` = PyTorch API name (**use the name you give for your operator**; e.g. if kernel is `add_custom`, then `{op_name}` is typically `add_custom`; keep naming consistent).
 
+**Pattern A/B** (with kernel):
 ```
 <project_root>/
 ├── {pkg}/
@@ -192,14 +204,28 @@ Placeholders: `{pkg}` = Python package name, `{kernel_name}` = kernel entry name
 │       └── tiling/        # optional, Pattern B
 │           └── *_tiling.cpp
 ├── CMakeLists.txt        # SOC_VERSION, ascendc_library, add_library, link torch_npu
-├── setup.py              # NpuExtension, build_clib/build_ext, package name {pkg}
+├── setup.py              # NpuExtension, build_clib/build_ext; use os.F_OK not os.path.F_OK
 └── test/
     └── test.py           # import {pkg}; .npu(); torch.ops.npu.{op_name}(...); cpu_ref; assertRtolEqual
 ```
 
+**Pattern C** (host-only, no kernel):
+```
+<project_root>/
+├── {pkg}/
+│   ├── __init__.py
+│   └── _load.py          # torch.ops.load_library(.../lib/lib{pkg}.so)
+├── csrc/host/
+│   └── {op_name}.cpp     # OpCommand only
+├── CMakeLists.txt        # file(GLOB), add_library, target_link_libraries(torch_npu)
+├── setup.py
+└── test/
+    └── test.py
+```
+
 **Naming consistency:** `{kernel_name}` must match `aclrtlaunch_{kernel_name}.h`, `EXEC_KERNEL_CMD({kernel_name}, ...)`, and the kernel source file. Package name must match the .so name and setup.py.
 
-**Multiple operators:** Add one `ascendc_library` per kernel (choose Pattern A or B and HAVE_WORKSPACE/HAVE_TILING accordingly), add one `csrc/host/{op_name}.cpp` per op (and tiling sources if needed), and add one `test_xxx` in test.py per op, keeping the same naming and test pattern as in the two reference examples.
+**Multiple operators:** Add one `ascendc_library` per kernel (Pattern A/B), add one `csrc/host/{op_name}.cpp` per op, and one `test_xxx` in test.py per op.
 
 ## 8. End-to-end automation checklist (demo-style)
 
@@ -233,10 +259,11 @@ These documents provide on-demand reference details; the main flow in this file 
 
 - [references/README.md](references/README.md) — References index and reading guide
 - [references/reference.md](references/reference.md) — Version matrix, SOC_VERSION, common links
-- [references/examples.md](references/examples.md) — Add new operator checklist (Pattern A/B)
+- [references/examples.md](references/examples.md) — Add new operator checklist (Pattern A/B/C)
+- [references/case_study_moe.md](references/case_study_moe.md) — Pattern C case study: moe_init_routing_grouped_matmul_grad (xpu_kernel)
 
 
 ## Additional resources
 
 - [references/reference.md](references/reference.md) — Version table, SOC_VERSION, links to op-plugin and cpp_extension README, Ascend C.
-- [references/examples.md](references/examples.md) — Generic “add a new operator” checklist (choose pattern → kernel → host → CMake → test) without binding to a specific op name.
+- [references/examples.md](references/examples.md) — Generic “add a new operator” checklist (choose pattern → kernel/host → CMake → test).
