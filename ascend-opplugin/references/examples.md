@@ -38,3 +38,4 @@ The two reference examples (add, matmul_leakyrelu) illustrate two patterns. Use 
 - Add as a new test method, e.g. `test_xxx`, following the same pattern as the add and matmul_leakyrelu tests.
 
 No separate demo script; running and validation are done via test.
+

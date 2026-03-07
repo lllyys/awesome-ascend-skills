@@ -21,7 +21,7 @@
 | v2.7.1    | 3.9, 3.10, 3.11 | 11.2             |
 | v2.8.0+   | 3.9, 3.10, 3.11 (3.10+ for 2.9+) | 13.3   |
 
-PyTorch 2.6+ does not support Python 3.8. Check op-plugin README for the exact matrix.
+PyTorch 2.6+ does not support Python 3.8. See the op-plugin README for the exact matrix.
 
 ## SOC_VERSION
 
@@ -34,3 +34,4 @@ PyTorch 2.6+ does not support Python 3.8. Check op-plugin README for the exact m
 - [Ascend Extension for PyTorch (torch_npu)](https://gitcode.com/ascend/pytorch)
 - op-plugin repo `examples/cpp_extension/README.md` — directory layout, kernel/host/tiling, run steps (path under repo: examples/cpp_extension/README.md)
 - [Ascend C](https://www.hiascend.com/ascend-c) — Ascend C kernel development
+
