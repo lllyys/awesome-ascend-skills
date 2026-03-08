@@ -73,6 +73,12 @@
       "description": "Diffusers 模型权重准备工具，用于华为昇腾 NPU。支持从 HuggingFace 和 ModelScope 下载模型权重，以及基于 config.json 生成假权重用于业务验证。当用户需要下载 Diffusers 模型权重或生成测试权重时使用。",
       "source": "./diffusers-ascend/diffusers-ascend-weight-prep",
       "category": "development"
+    },
+    {
+      "name": "diffusers-ascend-pipeline",
+      "description": "Diffusers Pipeline 推理指南，用于华为昇腾 NPU。覆盖环境预检、通用 Pipeline 推理（图像/视频模型）、内存优化（CPU offload、attention slicing、VAE slicing）和 LoRA 加载与融合。当用户需要在昇腾 NPU 上运行 Diffusers 推理时使用。",
+      "source": "./diffusers-ascend/diffusers-ascend-pipeline",
+      "category": "development"
     }
   ]
 }
