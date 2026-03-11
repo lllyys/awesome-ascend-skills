@@ -20,22 +20,23 @@ keywords:
 
 ## 执行策略
 
-1. 先要求使用者提供服务器 IP、账号、密码；如果缺少这些访问信息，直接中断，不猜测环境。
-2. 询问使用者是否有 CANN、torch 版本要求，以及是否指定 conda 环境名、容器名、CANN 目录。
-3. CANN 检查优先使用使用者提供的 CANN 目录；未提供时，再按 [cann](references/cann.md) 检索常见路径并判断当前版本布局：
+1. 首次向使用者收集信息时，用自然语言说明需要这些内容，不要直接丢固定模板。推荐表述为：我需要服务器信息（IP、账号、密码）；版本要求（CANN 和 torch，没有可以不用写）；测试环境（conda 环境名、docker 容器名、CANN 目录，没有可以不写）；以及 demo 方案（我生成 / 我提供）。
+2. 如果使用者没有提供服务器 IP、账号、密码，直接中断，不猜测环境。
+3. CANN 检查优先使用使用者提供的 CANN 目录；未提供或填写 `无` 时，再按 [cann](references/cann.md) 检索常见路径并判断当前版本布局：
    - `CANN < 8.5` 常见路径：`/usr/local/Ascend/ascend-toolkit/latest`
    - `CANN >= 8.5` 常见路径：`/usr/local/Ascend/cann/latest`
-4. 如果使用者希望走服务器 conda 环境，必须提供 conda 环境名；处理规则见 [conda](references/conda.md)。
-5. 如果使用者未选择 conda，或 conda 方案不满足要求，再按 [docker](references/docker.md) 查找容器。优先使用用户提供的容器名；未提供时，只把候选容器信息返回给用户确认。
-6. 无论 conda 还是容器，都必须先把环境名、torch/torch_npu 版本、CANN 版本返回给使用者确认，再执行 benchmark。
-7. 执行 benchmark 前，先询问使用者是“提供测试 demo”还是“由 AI 根据目标算子生成 demo”。如果使用者提供 demo，优先使用使用者的 demo。
-8. 当前仓库里的 `assets/config_template.yaml`、`scripts/bench_repeat_interleave.py` 和 `scripts/bench_op.py` 中 `repeat_interleave` 相关内容只是示例，不代表这个 Skill 只支持测试 `repeat_interleave`。
-9. 如果使用者没有提供额外用例，agent 可以根据目标算子的性能测试原则自行设计 demo；设计完成后先返回给使用者。
-10. 真正执行 benchmark 时，优先复用目标环境原本已有的 `torch` 和 `torch_npu`，不要重复安装。
-11. 如果当前环境缺少目标 CANN、`torch_npu` 不可用、或算子执行报环境错误，立即停止，不修环境；直接要求使用者提供新的可用环境。
-12. 不自动安装 CANN，不自动修复 conda 或容器，不启用任何回退安装流程。
-13. 如果测试过程中必须创建文件，都放到隔离测试目录，结束后删除。
-14. benchmark 结束后，直接返回完整结果信息，不额外生成报告文件。
+4. 如果使用者填写了 conda 环境名，优先按 [conda](references/conda.md) 走 conda 方案。
+5. 如果使用者填写了 docker 容器名，优先按 [docker](references/docker.md) 检查该容器。
+6. 如果 `conda 环境名` 和 `docker 容器名` 都是 `无`，则先查 conda 候选环境；用户不接受 conda 时再查容器候选环境。
+7. 无论 conda 还是容器，都必须先把环境名、torch/torch_npu 版本、CANN 版本返回给使用者确认，再执行 benchmark。
+8. `demo 方案` 只接受两种值：`我生成` 或 `我提供`。如果使用者选择 `我提供`，优先使用使用者提供的 demo 或算子补充信息。
+9. 当前仓库里的 `assets/config_template.yaml`、`scripts/bench_repeat_interleave.py` 和 `scripts/bench_op.py` 中 `repeat_interleave` 相关内容只是示例，不代表这个 Skill 只支持测试 `repeat_interleave`。
+10. 如果使用者未提供额外用例，agent 可以根据目标算子的性能测试原则自行设计 demo；设计完成后先返回给使用者。
+11. 真正执行 benchmark 时，优先复用目标环境原本已有的 `torch` 和 `torch_npu`，不要重复安装。
+12. 如果当前环境缺少目标 CANN、`torch_npu` 不可用、或算子执行报环境错误，立即停止，不修环境；直接要求使用者提供新的可用环境。
+13. 不自动安装 CANN，不自动修复 conda 或容器，不启用任何回退安装流程。
+14. 如果测试过程中必须创建文件，都放到隔离测试目录，结束后删除。
+15. benchmark 结束后，直接返回完整结果信息，不额外生成报告文件。
 
 ## 返回结果
 
