@@ -585,27 +585,40 @@ def update_readme(
     table_lines.append("")
     table_lines.append("---")
 
-    # Check if section already exists
+    # Check if table section already exists
     section_start = content.find("## 外部 Skills (External Skills)")
     section_end = content.find("\n---", section_start) if section_start != -1 else -1
 
     if section_start != -1 and section_end != -1:
-        # Replace existing section
+        # Replace existing table section
         content = (
             content[:section_start]
             + "\n".join(table_lines)
             + content[section_end + 4 :]
         )
     else:
-        # Insert after "## Skill 列表" section (before "## Skill 工作原理")
-        insert_marker = "\n---\n\n## Skill 工作原理"
+        # Insert after "## 外部 Skills 同步" section (before "## 提交 PR")
+        insert_marker = "\n---\n\n## 提交 PR"
         if insert_marker in content:
             content = content.replace(
-                insert_marker, "\n" + "\n".join(table_lines) + "\n\n## Skill 工作原理"
+                insert_marker, "\n" + "\n".join(table_lines) + "\n\n## 提交 PR"
             )
         else:
-            # Fallback: append at end before last section
-            content = content.rstrip() + "\n\n" + "\n".join(table_lines) + "\n"
+            # Fallback: insert before first section after "外部 Skills 同步"
+            sync_section = content.find("## 外部 Skills 同步")
+            if sync_section != -1:
+                next_section = content.find("\n## ", sync_section + 1)
+                if next_section != -1:
+                    content = (
+                        content[:next_section]
+                        + "\n\n"
+                        + "\n".join(table_lines)
+                        + content[next_section:]
+                    )
+                else:
+                    content = content.rstrip() + "\n\n" + "\n".join(table_lines) + "\n"
+            else:
+                content = content.rstrip() + "\n\n" + "\n".join(table_lines) + "\n"
 
     # Write back to file
     readme_file.write_text(content, encoding="utf-8")
