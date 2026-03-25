@@ -97,6 +97,70 @@
         "./diffusers-ascend/diffusers-ascend-weight-prep",
         "./diffusers-ascend/diffusers-ascend-pipeline"
       ]
+    },
+    {
+      "name": "training-mfu-calculator",
+      "description": "大模型训练 MFU (Model FLOPs Utilization) 计算工具。支持 Dense 和 MoE 模型，GQA 和 SwiGLU FFN。包含 NVIDIA GPU 和 Ascend NPU 硬件峰值 FLOPS 参考，默认使用 Ascend910B2 (353 TFLOPS)。提供详细的 FLOPs 分析和性能报告。",
+      "source": "./training-mfu-calculator",
+      "category": "development"
+    },
+    {
+      "name": "github-issue-summary",
+      "description": "Analyze closed GitHub issues to create troubleshooting case studies with root cause analysis and lessons learned. Use when summarizing resolved issue troubleshooting process, creating issue case studies, documenting problem-solving methodology, extracting lessons from closed issues, or building knowledge base from issue history.",
+      "source": "./github-issue-summary",
+      "category": "development"
+    },
+    {
+      "name": "profiling-analysis",
+      "description": "Profiling skill set for Huawei Ascend NPU performance analysis. Analyzes step_trace_time.csv files to identify hostbound, computing, and communication bottlenecks. Use when performing performance analysis and optimization on Ascend NPU.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./profiling-analysis/profiling-main",
+        "./profiling-analysis/profiling-hostbound",
+        "./profiling-analysis/profiling-computing",
+        "./profiling-analysis/profiling-communication"
+      ]
+    },
+    {
+      "name": "external-mindstudio-skills",
+      "description": "从 mindstudio 同步的 Ascend 技能集，包含 5 个技能：\n- ascend-profiler-db-explorer: 面向 Ascend PyTorch Profiler / msprof DB（如 ascend_pytorch_profiler*.db、msprof_*.db）的 SQL 分析技能。将自然语言问题（\n- op-mfu-calculator: 计算算子（如 matmul/GEMM）的 MFU（Machine FLOP Utilization），并给出清晰的公式和推导过程。\n- mindstudio_profiler_data_check: 当用户提供 MindStudio profiler 采集的性能数据（框架 profiler、msprof 命令行）时，对数据完整性、采集状态及关键配置进行校验，确保后续分析工具能正常运行。\n- ... 等 2 个技能",
+      "source": "./",
+      "strict": false,
+      "external": true,
+      "source-url": "https://github.com/kali20gakki/mindstudio-skills",
+      "source-branch": "main",
+      "skills": [
+        "./external/mindstudio/ascend-profiler-db-explorer",
+        "./external/mindstudio/op-mfu-calculator",
+        "./external/mindstudio/mindstudio_profiler_data_check",
+        "./external/mindstudio/cluster-fast-slow-rank-detector",
+        "./external/mindstudio/github-raw-fetch"
+      ]
+    },
+    {
+      "name": "external-gitcode-ascend-skills",
+      "description": "从 gitcode-ascend 同步的 Ascend 技能集，包含 7 个技能：\n- vLLM-ascend_FAQ_Generator: 为 vLLM-ascend 项目构建自动化工作流，处理已关闭的Issue并生成Debug FAQ。Use when users want to process closed issues from v\n- vector-triton-ascend-ops-optimizer: 昇腾（Ascend） NPU 上 Triton 算子深度性能优化技能（Skill），致力于实现用户要求的 Triton 算子性能提升。核心技术包括但不限于 Unified Buffer (UB) 容量\n- ascend-inference-repos-copilot: 昇腾（Ascend）推理生态开源代码仓库智能问答专家旨在为 vLLM、vLLM-Ascend、MindIE-LLM、MindIE-SD、MindIE-Motor、MindIE-Turbo 以及 msM\n- ... 等 4 个技能",
+      "source": "./",
+      "strict": false,
+      "external": true,
+      "source-url": "https://gitcode.com/Ascend/agent-skills",
+      "source-branch": "master",
+      "skills": [
+        "./external/gitcode-ascend/vLLM-ascend_FAQ_Generator",
+        "./external/gitcode-ascend/vector-triton-ascend-ops-optimizer",
+        "./external/gitcode-ascend/ascend-inference-repos-copilot",
+        "./external/gitcode-ascend/ascend-profiling-anomaly",
+        "./external/gitcode-ascend/simple-vector-triton-gpu-to-npu",
+        "./external/gitcode-ascend/skill-auditor",
+        "./external/gitcode-ascend/npu-adapter-reviewer"
+      ]
+    },
+    {
+      "name": "wan-ascend-adaptation",
+      "description": "Comprehensive guide for adapting Wan series video generation models (Wan2.2/2.1/1.3) and similar diffusion-based video frameworks to Huawei Ascend NPU. ",
+      "source": "./wan-ascend-adaptation",
+      "category": "development"
     }
   ]
 }
