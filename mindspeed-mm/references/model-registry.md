@@ -13,9 +13,9 @@ Complete lookup table for all supported models. Use this to find the right entry
 | Qwen3VL | `qwen3vl` | FSDP2 | `pretrain_transformers.py` | `Qwen3VLConverter` (hf_to_dcp) | `requirements.txt` (git transformers) | 8B/30B/32B/235B |
 | InternVL2.5 | `internvl2.5` | Megatron | `pretrain_internvl.py` | `InternVLConverter` | base | 4B/78B |
 | InternVL3 | `internvl3` | Megatron | `pretrain_vlm.py` | `InternVLConverter` | base | 8B/78B |
-| InternVL3.5 | `internvl3.5` | FSDP2 | `pretrain_transformers.py` | `ExpertMergeDcpConverter` (DCP) | base | 30B (MoE) |
+| InternVL3.5 | `internvl3.5` | FSDP2 | `pretrain_transformers.py` | `ExpertMergeDcpConverter` (DCP) | git transformers (c0dbe09) | 30B (MoE) |
 | GLM4.1V | `glm4.1v` | Megatron | `pretrain_vlm.py` | `GlmConverter` | base | 9B |
-| GLM4.5V | `glm4.5v` | FSDP2 | `pretrain_transformers.py` | `ExpertMergeDcpConverter` (DCP) | base | 106B (MoE) |
+| GLM4.5V | `glm4.5v` | FSDP2 | `pretrain_transformers.py` | `ExpertMergeDcpConverter` (DCP) | git transformers (8cb5963) | 106B (MoE) |
 | DeepSeekVL2 | `deepseekvl2` | Megatron | `pretrain_deepseekvl.py` | `DeepSeekVLConverter` (hf_to_mm only) | base | MoE |
 | DeepSeekOCR | `deepseekocr` | Custom | `finetune_ocr.py` | None (HF direct) | `requirements.txt` (transformers==4.46.3) | -- |
 | DeepSeekOCR2 | `deepseekocr2` | Custom | `finetune_ocr2.py` | None (HF direct) | `requirements.txt` | -- |
@@ -91,11 +91,11 @@ Complete lookup table for all supported models. Use this to find the right entry
 | `DeepSeekVLConverter` | `checkpoint/vlm_model/converters/deepseekvl2.py` | hf_to_mm only | DeepSeekVL2 |
 | `BagelConverter` | `checkpoint/sora_model/bagel_converter.py` | hf_to_mm | Bagel |
 | `WanConverter` | `checkpoint/sora_model/wan_converter.py` | hf_to_mm, mm_to_hf, resplit | Wan2.1, Wan2.2 |
-| `HunyuanVideoConverter` | `checkpoint/sora_model/hunyuanvideo_converter.py` | source_to_mm, mm_to_hf | HunyuanVideo, HunyuanVideo 1.5 |
-| `CogVideoConverter` | `checkpoint/sora_model/cogvideo_converter.py` | source_to_mm, mm_to_hf | CogVideoX |
+| `HunyuanVideoConverter` | `checkpoint/sora_model/hunyuanvideo_converter.py` | source_to_mm, resplit, layerzero_to_mm, merge_lora_to_base | HunyuanVideo, HunyuanVideo 1.5 |
+| `CogVideoConverter` | `checkpoint/sora_model/cogvideo_converter.py` | hf_to_mm, source_to_mm, resplit, layerzero_to_mm, merge_lora_to_base | CogVideoX |
 | `OpenSoraPlanConverter` | `checkpoint/sora_model/opensoraplan_converter.py` | v1.3: hf_to_mm, resplit; v1.5: source_to_mm, resplit | OpenSoraPlan 1.3/1.5 |
 | `OpenSoraConverter` | `checkpoint/sora_model/opensora_converter.py` | hf_to_mm | OpenSora 2.0 |
-| `StepVideoConverter` | `checkpoint/sora_model/stepvideo_converter.py` | hf_to_mm | StepVideo |
+| `StepVideoConverter` | `checkpoint/sora_model/stepvideo_converter.py` | hf_to_mm, resplit | StepVideo |
 | `LuminaConverter` | `checkpoint/sora_model/lumina_converter.py` | hf_to_mm, mm_to_hf | Lumina |
 | `VACEConverter` | `checkpoint/sora_model/vace_converter.py` | hf_to_mm, mm_to_hf | VACE |
 | None | -- | -- | DeepSeekOCR, DeepSeekOCR2, Ming, JanusPro, all diffusers models |

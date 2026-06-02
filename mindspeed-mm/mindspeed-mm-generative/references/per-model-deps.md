@@ -1,6 +1,6 @@
 # Per-Model Dependencies for Generative Models
 
-This document lists the model-specific dependency requirements for each generative model supported by MindSpeed-MM. The base environment is covered by the `mindspeed-mm-env-setup` Skill.
+This document lists the model-specific dependency requirements for each generative model supported by MindSpeed-MM. The base environment setup is covered in the [Environment Setup Guide](../../references/env-setup.md).
 
 > **Key principle**: Different models have severe dependency version conflicts. It is strongly recommended to create a separate Docker container or virtual environment for each model.
 
@@ -9,7 +9,7 @@ This document lists the model-specific dependency requirements for each generati
 | Package | Base Version |
 |---|---|
 | torch | 2.7.1 |
-| torch_npu | 2.7.1rc1 |
+| torch_npu | 2.7.1rc1 (installed separately, not in pyproject.toml) |
 | transformers | 4.57.0 |
 | diffusers | 0.30.3 |
 | peft | 0.7.1 |
@@ -96,10 +96,10 @@ pip install diffusers==0.30.3   # Typically compatible with base version
 **Override installation required**:
 
 ```bash
-# Check dependency requirements under examples/flux/
+# Check dependency requirements under examples/diffusers/flux/
 ```
 
-**Notes**: FLUX is the only t2i (text-to-image) model. Prototype stage. No video frame-related dependencies.
+**Notes**: FLUX is one of several t2i (text-to-image) models under `examples/diffusers/` (others include SD3, SDXL, Sana, HiDream). Prototype stage. No video frame-related dependencies.
 
 ## OpenSoraPlan 1.3 / 1.5
 

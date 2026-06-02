@@ -1,18 +1,25 @@
 ---
 name: mindspeed-mm-vlm
-description: Universal VLM (vision-language understanding model) training guide for Huawei Ascend NPU using MindSpeed-MM. Covers all three framework patterns (Megatron, FSDP2, Custom trainers), weight conversion, dataset preparation (MLLM JSON format), fine-tuning, inference, and evaluation. Supports Qwen2.5VL, Qwen2VL, Qwen3VL, InternVL2.5/3/3.5, GLM4.1V, GLM4.5V, DeepSeekVL2, DeepSeekOCR, Ming, and more. Use when training or fine-tuning any multimodal understanding model on Ascend NPU.
+description: Universal VLM (vision-language understanding model) training guide for Huawei Ascend NPU using MindSpeed-MM. Covers Megatron, FSDP2, and Custom trainer framework patterns, weight conversion (mm-convert), dataset preparation (MLLM JSON format), fine-tuning, inference, and evaluation. Supported model families — Qwen2.5VL, Qwen2VL, Qwen3VL, InternVL2.5/3/3.5, GLM4V (GLM4.1V, GLM4.5V), DeepSeekVL2, DeepSeekOCR, Ming. Use for any multimodal understanding, vision-language, VLM, image understanding, or OCR task on Ascend NPU.
 keywords:
     - mindspeed-mm
     - vlm
     - multimodal understanding
+    - vision-language
+    - image understanding
+    - ocr
     - qwen2.5vl
+    - qwen2vl
     - qwen3vl
     - internvl
     - glm4v
+    - glm4.1v
+    - glm4.5v
+    - deepseekvl2
+    - deepseekocr
     - deepseekvl
     - finetune
     - fine-tuning
-    - vision-language
     - megatron
     - fsdp2
 ---
@@ -27,6 +34,8 @@ This Skill guides users through training multimodal understanding (VLM) models o
 
 ### Step P1: Clone repositories
 
+> **Do NOT use `--depth=1`** for Megatron-LM. Shallow clones break `git checkout core_v0.12.1` and cause import failures at runtime.
+
 ```bash
 git clone https://gitcode.com/Ascend/MindSpeed-MM.git /root/workspace/MindSpeed-MM
 git clone https://github.com/NVIDIA/Megatron-LM.git /root/workspace/Megatron-LM
@@ -37,15 +46,13 @@ cd /root/workspace/MindSpeed-MM
 
 ### Step P2: Install PyTorch + torch_npu
 
-**Always use pre-built wheels** from [Ascend PyTorch Releases](https://gitcode.com/Ascend/pytorch/releases). Do **not** use `pip install torch==2.7.1` — aarch64 wheels on PyPI are unreliable.
+Check the [version compatibility matrix](../references/env-setup.md) for matching versions, then:
 
 ```bash
-# Download matching wheels from https://gitcode.com/Ascend/pytorch/releases
-# Replace cp310 with cp311 if using Python 3.11
-pip install torch-2.7.1-cp310-cp310-manylinux_2_28_aarch64.whl
-pip install torch_npu-2.7.1rc1-cp310-cp310-manylinux_2_28_aarch64.whl
-# For x86_64: same naming pattern with _x86_64 suffix
-
+# Install PyTorch (CPU index has aarch64 wheels)
+pip install torch==<version> --index-url https://download.pytorch.org/whl/cpu
+# Install torch_npu (PyPI has aarch64 wheels)
+pip install torch_npu==<matching_version>
 # Required by torch_npu and other components:
 pip install numpy pyyaml scipy attrs decorator psutil
 ```
@@ -89,7 +96,7 @@ print(f'transformers={transformers.__version__}, diffusers={diffusers.__version_
 
 **Then proceed to Step 0** below for model-specific dependencies. For Qwen2.5VL the base is sufficient; other models need overlays (see Step 0 table).
 
-For detailed troubleshooting and alternative install paths, see [mindspeed-mm-env-setup](../mindspeed-mm-env-setup/SKILL.md).
+For detailed troubleshooting and alternative install paths, see [Environment Setup Reference](../references/env-setup.md).
 
 ## Supported VLM Models
 
@@ -110,6 +117,10 @@ For detailed troubleshooting and alternative install paths, see [mindspeed-mm-en
 
 > **Entry Script Note**: VLM models use different entry scripts. Check the shell script in `examples/<model_name>/` for the exact command — do not assume from the model name.
 
+### Model Selection
+
+Looking for **video/image generation** models (Wan, HunyuanVideo, CogVideoX, FLUX)? See [mindspeed-mm-generative](../mindspeed-mm-generative/SKILL.md).
+
 ## How to Train Any VLM Model
 
 The workflow for training **any** VLM model in MindSpeed-MM follows a universal pattern:
@@ -120,7 +131,7 @@ The workflow for training **any** VLM model in MindSpeed-MM follows a universal 
 4. **Modify config files**: Update data paths and weight paths in the config files (JSON or YAML depending on the framework)
 5. **Launch the shell script**: `bash examples/<model_name>/finetune_<model>_<size>.sh`
 
-For other models, adapt the Qwen2.5VL quick start below. Use the [Model Registry](../mindspeed-mm-pipeline/references/model-registry.md) to look up the exact entry script, converter, and backend for your target model.
+For other models, adapt the Qwen2.5VL quick start below. Use the [Model Registry](../references/model-registry.md) to look up the exact entry script, converter, and backend for your target model.
 
 ### Framework Patterns
 
@@ -212,7 +223,7 @@ Key parameter descriptions:
 | Qwen2VL | `Qwen2VLConverter` | hf_to_mm / mm_to_hf | Same pattern as Qwen2.5VL |
 | Qwen3VL | `Qwen3VLConverter` | hf_to_dcp / dcp_to_hf | **FSDP2**: uses DCP format, not mm format |
 | Qwen3VL (Megatron) | `Qwen3VLMegatronConverter` | hf_to_mm / mm_to_hf | Alternative Megatron-path converter |
-| InternVL2.5/3 | `InternVLConverter` | hf_to_mm / mm_to_hf | `--cfg.parallel_config.vit_pp_layers [[45]]` |
+| InternVL2.5/3 | `InternVLConverter` | hf_to_mm / mm_to_hf | `vit_pp_layers` varies by model size (e.g., `[[24]]` for 4B, `[[45]]` for 78B) |
 | InternVL3.5 | `ExpertMergeDcpConverter` | hf_to_dcp / dcp_to_hf | FSDP2 path; MoE model uses expert merge converter |
 | DeepSeekVL2 | `DeepSeekVLConverter` | hf_to_mm only | `mm_to_hf` is unimplemented (stub). Note MoE expert layers |
 | GLM4.1V | `GlmConverter` | hf_to_mm / mm_to_hf | Generic Megatron converter |
@@ -225,29 +236,33 @@ Key parameter descriptions:
 
 VLM training uses the **MLLM JSON format**. This example uses COCO2017 + LLaVA-Instruct-150K.
 
-#### 2.1 Download Data
+#### 2.1 Download Data and Create Symlinks
+
+The conversion script uses **hardcoded relative paths** (`./data/`). You MUST either place data there or create symlinks:
 
 ```bash
-# 1. Download COCO2017 training images
-mkdir -p data/COCO2017/train2017
-# Extract to data/COCO2017/train2017/
+cd /root/workspace/MindSpeed-MM  # All paths are relative to repo root
+mkdir -p data/COCO2017
 
-# 2. Download LLaVA-Instruct-150K
-# Download llava_instruct_150k.json to data/
+# Symlink or copy your data to ./data/
+ln -sf /home/data/coco2017/train2017 data/COCO2017/train2017
+ln -sf /home/data/llava-instruct-150k/llava_instruct_150k.json data/llava_instruct_150k.json
 ```
 
 #### 2.2 Convert to MLLM Format
-
-> **Important**: The conversion script uses hardcoded relative paths. It expects `./data/llava_instruct_150k.json` as input and `./data/COCO2017/train2017/` for image lookup. Run it from the MindSpeed-MM root directory, and ensure data is at `./data/` (or create symlinks).
 
 ```bash
 cd /root/workspace/MindSpeed-MM  # Must run from repo root
 python examples/qwen2vl/llava_instruct_2_mllm_demo_format.py
 ```
 
-Output: `data/mllm_format_llava_instruct_data.json`
+**Verify conversion succeeded** (critical — the script silently produces empty output if paths are wrong):
+```bash
+python3 -c "import json; d=json.load(open('data/mllm_format_llava_instruct_data.json')); print(f'{len(d)} samples')"
+# Expected: ~150000 samples. If 0, your symlinks are wrong.
+```
 
-The script converts LLaVA format (`conversations`/`image`) to MLLM format (`messages`/`images`), which is what MindSpeed-MM expects.
+The script converts LLaVA format (`conversations`/`image`) to MLLM format (`messages`/`images`).
 
 #### 2.3 Data Directory Structure
 
@@ -273,29 +288,29 @@ Qwen2.5VL-3B fine-tuning requires two JSON configuration files:
 
 Path: `examples/qwen2.5vl/data_3b.json`
 
+**Must edit before running** — update these 3 paths using **absolute paths**:
+
 ```json
 {
     "dataset_param": {
         "dataset_type": "huggingface",
         "preprocess_parameters": {
-            "model_name_or_path": "./ckpt/hf_path/Qwen2.5-VL-3B-Instruct"
+            "model_name_or_path": "/home/weights/Qwen2.5-VL-3B-Instruct"
         },
         "basic_parameters": {
-            "dataset_dir": "./data",
-            "dataset": "./data/mllm_format_llava_instruct_data.json",
-            "cache_dir": "./data/cache_dir"
+            "dataset_dir": "/root/workspace/MindSpeed-MM/data",
+            "dataset": "/root/workspace/MindSpeed-MM/data/mllm_format_llava_instruct_data.json",
+            "cache_dir": "/root/workspace/MindSpeed-MM/data/cache_dir"
         }
     }
 }
 ```
 
-**Must edit before running** — update these 3 paths to match your environment:
-
-| Field | Description | What to set |
-|-------|-------------|-------------|
-| `model_name_or_path` | **Original HF weights** (not MM-converted) | e.g., `/home/weights/Qwen2.5-VL-3B-Instruct` |
-| `dataset` | MLLM format JSON path | e.g., `./data/mllm_format_llava_instruct_data.json` |
-| `cache_dir` | Data preprocessing cache (LOCAL path) | e.g., `./data/cache_dir` — **not NFS/shared mount** |
+| Field | What to set | Notes |
+|-------|-------------|-------|
+| `model_name_or_path` | Absolute path to **original HF weights** (not MM-converted) | Used to load tokenizer/processor |
+| `dataset` | Absolute path to converted MLLM JSON | Verify it's non-empty first |
+| `cache_dir` | Absolute LOCAL path | **Not NFS/shared mount** in multi-node |
 
 > **Multi-node Note**: `cache_dir` stores preprocessing cache. During multi-node training, each node must use a local path and must not point to an NFS shared directory, otherwise concurrent write conflicts will occur.
 
@@ -428,6 +443,10 @@ See the relevant files in the `examples/qwen2vl/` directory for DPO configuratio
 
 ## FAQ
 
+**Q: `ValueError: Instruction "train" corresponds to no data!`**
+
+The converted dataset JSON is empty (0 samples). The conversion script silently skips images when `./data/COCO2017/train2017/` doesn't exist. Fix: verify symlinks with `ls data/COCO2017/train2017/ | head`, then re-run conversion and check output with `python3 -c "import json; print(len(json.load(open('data/mllm_format_llava_instruct_data.json'))))"`.
+
 **Q: Training fails with `shape mismatch` after weight conversion**
 
 `pipeline_num_layers` does not match the `llm_pp_layers` / `vit_pp_layers` used during weight conversion. Check that the layer count configuration in model.json matches the parameters passed to the `mm-convert` command.
@@ -458,14 +477,22 @@ ps aux | grep torchrun | grep -v grep | awk '{print $2}' | xargs kill -9
 
 ## Related Skills
 
-- [mindspeed-mm-env-setup](../mindspeed-mm-env-setup/SKILL.md) - MindSpeed-MM Environment Setup
+- [mindspeed-mm-generative](../mindspeed-mm-generative/SKILL.md) - Generative (video/image) model training on Ascend NPU
 - [ascend-docker](../../ascend-docker/SKILL.md) - Ascend Docker Container Configuration
 - [hccl-test](../../hccl-test/SKILL.md) - Multi-Device Communication Testing
 
 ## Reference Resources
 
+### Skill-local references
 - [Model Delta Cards](references/model-delta-cards.md) - Execution checklists for non-flagship models (Qwen3VL, InternVL3.5, GLM4.5V, DeepSeekVL2, DeepSeekOCR, Ming)
 - [Model Dependency Configuration](references/per-model-deps.md) - Dependencies and version requirements for each VLM model
 - [Data Format Specification](references/data-format.md) - Detailed MLLM JSON format documentation
-- [Model Registry](../mindspeed-mm-pipeline/references/model-registry.md) - Complete lookup table for all models
+
+### Shared references
+- [Environment Setup](../references/env-setup.md) - MindSpeed-MM environment setup (CANN, torch_npu, MindSpeed)
+- [Weight Conversion Guide](../references/conversion-guide.md) - mm-convert usage, converter list, PP/TP partitioning
+- [Model Registry](../references/model-registry.md) - Complete lookup table for all models (entry scripts, converters, backends)
+- [Common Training Arguments](../references/common-args.md) - Shared CLI arguments across MindSpeed-MM training scripts
+
+### External
 - [MindSpeed-MM Repository](https://gitcode.com/ascend/MindSpeed-MM)

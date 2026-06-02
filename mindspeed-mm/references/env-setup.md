@@ -1,17 +1,3 @@
----
-name: mindspeed-mm-env-setup
-description: MindSpeed-MM multimodal model suite environment setup guide for Huawei Ascend NPU. Covers CANN activation, PyTorch + torch_npu installation, MindSpeed acceleration library, Megatron-LM core module integration, and MindSpeed-MM installation. Use when setting up MindSpeed-MM multimodal training environment on Ascend NPU.
-keywords:
-    - mindspeed
-    - mindspeed-mm
-    - multimodal
-    - environment
-    - installation
-    - cann
-    - torch_npu
-    - megatron
-    - ascend npu
----
 
 # MindSpeed-MM Ascend NPU Base Environment Setup
 
@@ -39,10 +25,10 @@ source /usr/local/Ascend/cann/set_env.sh
 source /usr/local/Ascend/nnal/atb/set_env.sh
 
 # 2. Install PyTorch + torch_npu — USE PRE-BUILT WHEELS from https://gitcode.com/Ascend/pytorch/releases
-# Do NOT use `pip install torch==2.7.1` — aarch64 wheels on PyPI are unreliable
-# For Python 3.10 + aarch64:
-pip install torch-2.7.1-cp310-cp310-manylinux_2_28_aarch64.whl
-pip install torch_npu-2.7.1rc1-cp310-cp310-manylinux_2_28_aarch64.whl
+# Install PyTorch (CPU index has aarch64 wheels) — check version matrix for matching versions
+pip install torch==<version> --index-url https://download.pytorch.org/whl/cpu
+# Install torch_npu (PyPI has aarch64 wheels)
+pip install torch_npu==<matching_version>
 pip install numpy pyyaml scipy attrs decorator psutil
 
 # 3. Clone and install MindSpeed (pinned to a specific commit)
@@ -176,7 +162,7 @@ The base installation (`pip install -e .`) installs the following core dependenc
 **Isolation recommendations**:
 - Create a separate Docker container or conda/venv environment for each model
 - Complete the base environment setup first, then install model-specific dependencies in an isolated environment
-- See [references/version-matrix.md](references/version-matrix.md) for the full conflict matrix
+- See [./version-matrix.md](./version-matrix.md) for the full conflict matrix
 
 ## Environment Verification Checklist
 
@@ -290,7 +276,7 @@ The base environment setup is complete. Next, install additional dependencies fo
 
 ## References
 
-- [Version Conflict Matrix](references/version-matrix.md) - Dependency version conflict details for each model
+- [Version Conflict Matrix](./version-matrix.md) - Dependency version conflict details for each model
 - [MindSpeed-MM Repository](https://gitcode.com/ascend/MindSpeed-MM)
 - [MindSpeed Repository](https://gitcode.com/ascend/MindSpeed)
 - [Megatron-LM](https://github.com/NVIDIA/Megatron-LM)

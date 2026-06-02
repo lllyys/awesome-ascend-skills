@@ -1,6 +1,6 @@
 ---
 name: mindspeed-mm-generative
-description: Universal MindSpeed-MM generative model training guide for Huawei Ascend NPU. Covers all backend patterns (Megatron, Megatron+FSDP2, FSDP2-native, Accelerate+DeepSpeed), feature extraction, weight conversion, and training for ALL supported generative models. Supports Wan2.1/2.2, HunyuanVideo/1.5, CogVideoX, OpenSoraPlan, VACE, LTX2, FLUX, SD3, SDXL, Sana, HiDream, StepVideo, Lumina and more. Use when training multimodal generative models on Ascend NPU.
+description: MindSpeed-MM generative model training on Huawei Ascend NPU — video generation and image generation via diffusion. Covers text-to-video (t2v), text-to-image (t2i), image-to-video (i2v) tasks across all backend patterns (Megatron, Megatron+FSDP2, FSDP2-native, Accelerate+DeepSpeed). Model families include Wan2.1, Wan2.2, HunyuanVideo, CogVideoX, FLUX, OpenSoraPlan, StepVideo, SD3, SDXL, Sana, HiDream, VACE, LTX2, Lumina. Covers feature extraction, weight conversion, and end-to-end training. Use for ANY generative/diffusion model training on Ascend NPU.
 keywords:
     - mindspeed-mm
     - generative
@@ -30,6 +30,8 @@ This Skill guides users through the end-to-end training pipeline for multimodal 
 
 ### Step P1: Clone repositories
 
+> **Do NOT use `--depth=1`** for Megatron-LM. Shallow clones break `git checkout core_v0.12.1` and cause import failures at runtime.
+
 ```bash
 git clone https://gitcode.com/Ascend/MindSpeed-MM.git /root/workspace/MindSpeed-MM
 git clone https://github.com/NVIDIA/Megatron-LM.git /root/workspace/Megatron-LM
@@ -40,15 +42,13 @@ cd /root/workspace/MindSpeed-MM
 
 ### Step P2: Install PyTorch + torch_npu
 
-**Always use pre-built wheels** from [Ascend PyTorch Releases](https://gitcode.com/Ascend/pytorch/releases). Do **not** use `pip install torch==2.7.1` — aarch64 wheels on PyPI are unreliable.
+Check the [version compatibility matrix](../references/env-setup.md) for matching versions, then:
 
 ```bash
-# Download matching wheels from https://gitcode.com/Ascend/pytorch/releases
-# Replace cp310 with cp311 if using Python 3.11
-pip install torch-2.7.1-cp310-cp310-manylinux_2_28_aarch64.whl
-pip install torch_npu-2.7.1rc1-cp310-cp310-manylinux_2_28_aarch64.whl
-# For x86_64: same naming pattern with _x86_64 suffix
-
+# Install PyTorch (CPU index has aarch64 wheels)
+pip install torch==<version> --index-url https://download.pytorch.org/whl/cpu
+# Install torch_npu (PyPI has aarch64 wheels)
+pip install torch_npu==<matching_version>
 # Required by torch_npu and other components:
 pip install numpy pyyaml scipy attrs decorator psutil
 ```
@@ -92,7 +92,7 @@ print(f'transformers={transformers.__version__}, diffusers={diffusers.__version_
 
 **Then proceed to Step 0** below for model-specific dependencies (diffusers upgrade, decord, etc.) — Prerequisites alone is NOT enough for any generative model.
 
-For detailed troubleshooting and alternative install paths, see [mindspeed-mm-env-setup](../mindspeed-mm-env-setup/SKILL.md).
+For detailed troubleshooting and alternative install paths, see [Environment Setup Guide](../references/env-setup.md).
 
 ## Supported Models
 
@@ -121,9 +121,13 @@ For detailed troubleshooting and alternative install paths, see [mindspeed-mm-en
 - **v2v** (video-to-video): Video style transfer
 - **flf2v** (first-last-frame-to-video): Generate intermediate video from the first and last frames
 
+## Model Selection
+
+This skill covers all **generative** (diffusion-based) models in MindSpeed-MM. Looking for **VLM/understanding** models (Qwen2.5VL, InternVL, GLM4V)? See [mindspeed-mm-vlm](../mindspeed-mm-vlm/SKILL.md).
+
 ## How to Train Any Generative Model
 
-For ANY generative model, use the [Model Registry](../mindspeed-mm-pipeline/references/model-registry.md) to look up the exact backend, entry script, converter, and feature extraction script. Then:
+For ANY generative model, use the [Model Registry](../references/model-registry.md) to look up the exact backend, entry script, converter, and feature extraction script. Then:
 
 1. Check `examples/<model_name>/README.md` for model-specific instructions
 2. Read the shell script to identify: entry script, config files, backend pattern
@@ -236,7 +240,7 @@ mm-convert WanConverter hf_to_mm \
 ```
 
 > **Why `LOAD_PATH` uses `transformer/` (parent dir)**: `mm-convert hf_to_mm` writes `latest_checkpointed_iteration.txt` in `transformer/` and stores weights in `transformer/release/`. Megatron checkpoint loading reads `latest_checkpointed_iteration.txt` to resolve the actual subdirectory automatically. Set `LOAD_PATH` to `.../transformer/`, **not** `.../transformer/release/`.
-> For detailed information on weight conversion, refer to the `mindspeed-mm-weight-prep` Skill.
+> For detailed information on weight conversion, refer to the [Weight Conversion Guide](../references/conversion-guide.md).
 
 ### Step 2: Dataset Preparation
 
@@ -438,29 +442,12 @@ MindSpeed-MM/
 ├── posttrain_sora_dpo.py            # DPO post-training entry point
 ├── posttrain_flux_dancegrpo.py      # GRPO post-training entry point
 ├── mindspeed_mm/
-│   ├── fsdp/train/trainer.py        # FSDP2-native trainer (used by ltx2)
+│   ├── fsdp/train/trainer.py        # FSDP2-native trainer (ltx2)
 │   └── tools/
-│       ├── tools.json               # Global config (sorafeature.save_path for feature output)
-│       └── feature_extraction/
-│           ├── get_wan_feature.py        # Wan2.1 feature extraction
-│           ├── get_hunyuan_feature.py    # HunyuanVideo feature extraction
-│           ├── get_sora_feature.py       # CogVideoX, StepVideo, OpenSoraPlan
-│           ├── get_lumina_feature.py     # Lumina feature extraction
-│           └── get_vace_feature.py       # VACE feature extraction
+│       ├── tools.json               # Global config (sorafeature.save_path)
+│       └── feature_extraction/      # get_wan_feature.py, get_hunyuan_feature.py, etc.
 └── examples/
-    ├── wan2.1/                      # Megatron backend
-    │   ├── feature_extract/
-    │   │   ├── feature_extraction.sh
-    │   │   ├── model_t2v.json
-    │   │   ├── data.json
-    │   │   └── data.txt
-    │   ├── 1.3b/t2v/
-    │   │   ├── pretrain.sh
-    │   │   ├── inference.sh
-    │   │   ├── data.txt
-    │   │   ├── feature_data.json
-    │   │   └── pretrain_model.json
-    │   └── 14b/t2v/
+    ├── wan2.1/                      # Megatron backend (feature_extract/, 1.3b/, 14b/)
     ├── wan2.2/                      # Megatron+FSDP2 backend
     ├── hunyuanvideo/                # Megatron backend
     ├── hunyuanvideo_1.5/            # Megatron+FSDP2 backend
@@ -471,12 +458,7 @@ MindSpeed-MM/
     ├── stepvideo/                   # Megatron backend
     ├── vace/                        # Megatron+FSDP2 backend
     ├── ltx2/                        # FSDP2-native backend
-    └── diffusers/                   # Accelerate+DeepSpeed backend
-        ├── flux/
-        ├── sd3/
-        ├── sdxl/
-        ├── sana/
-        └── hidream/
+    └── diffusers/                   # Accelerate+DeepSpeed (flux, sd3, sdxl, sana, hidream)
 ```
 
 ## FAQ
@@ -493,8 +475,16 @@ MindSpeed-MM/
 
 ## References
 
+### Skill-local references
 - [Model Delta Cards](references/model-delta-cards.md) - Execution checklists for non-flagship models (Wan2.2, HunyuanVideo, CogVideoX, Diffusers/FLUX)
 - [Per-Model Dependencies](references/per-model-deps.md) - Dependency versions and installation instructions for each generative model
 - [Feature Extraction Guide](references/feature-extraction.md) - Feature extraction configuration files, workflow, and troubleshooting
-- [Model Registry](../mindspeed-mm-pipeline/references/model-registry.md) - Complete lookup table for all models
+
+### Shared references
+- [Environment Setup Guide](../references/env-setup.md) - Base environment setup for MindSpeed-MM on Ascend NPU
+- [Weight Conversion Guide](../references/conversion-guide.md) - Weight format conversion (HuggingFace to MindSpeed-MM and back)
+- [Model Registry](../references/model-registry.md) - Complete lookup table for all models (backend, converter, feature extraction)
+- [Common Arguments](../references/common-args.md) - Shared training arguments and parallelism configuration
+
+### External
 - [MindSpeed-MM Repository](https://gitcode.com/ascend/MindSpeed-MM)

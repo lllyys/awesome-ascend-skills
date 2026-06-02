@@ -7,8 +7,8 @@ This document lists the version requirements for key dependency packages across 
 | Model | transformers | diffusers | peft | Additional Dependencies |
 |---|---|---|---|---|
 | **Base (pyproject.toml)** | 4.57.0 | 0.30.3 | 0.7.1 | -- |
-| **qwen3vl** | from git (c0dbe09) | -- | -- | triton-ascend, accelerate==1.2.0 |
-| **qwen3_5** | from source | -- | -- | triton-ascend, accelerate==1.2.0 |
+| **qwen3vl** | from git (c0dbe09) | -- | -- | -- |
+| **qwen3_5** | from git (fc91372) | -- | -- | triton-ascend==3.2.0, accelerate==1.2.0 |
 | **wan2.2** | -- | 0.35.1 | 0.17.1 | -- |
 | **hunyuanvideo_1.5** | 4.57.1 | 0.35.0 | 0.17.0 | omegaconf, modelscope, angelslim |
 | **deepseekocr** | 4.46.3 (downgrade!) | -- | -- | PyMuPDF, img2pdf |
@@ -88,7 +88,7 @@ The following models can share the same environment (no dependency conflicts):
 | Environment Group | Shareable Models | Notes |
 |---|---|---|
 | Base group | cosyvoice3 | Does not override base dependency versions; only adds extra dependencies |
-| qwen group | qwen3vl, qwen3_5 | Both require git-source transformers + triton-ascend |
+| qwen group | qwen3vl, qwen3_5 | Both require git-source transformers; qwen3_5 also needs triton-ascend + accelerate |
 | Video generation group | -- | wan2.2 and hunyuanvideo_1.5 have incompatible diffusers/peft versions and cannot share an environment |
 
 > Note: Even for models marked as shareable, it is still recommended to use separate environments in practice to avoid potential hidden conflicts.

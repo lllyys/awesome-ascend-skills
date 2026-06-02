@@ -64,10 +64,11 @@ Key notes:
 
 ### GLM4.1V
 
-**Additional dependencies**:
+**Additional dependencies**: None. The MindSpeed-MM base environment is sufficient.
 
 ```bash
-pip install -r examples/glm4v/requirements.txt
+# No additional installation required
+# The actual directory is examples/glm4.1v/ (not examples/glm4v/) and it has no requirements.txt
 ```
 
 Generally compatible with the base environment; low conflict risk.

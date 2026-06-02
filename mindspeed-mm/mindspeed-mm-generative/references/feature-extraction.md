@@ -158,7 +158,7 @@ After feature extraction is complete, update the training phase configuration:
 1. **`examples/wan2.1/1.3b/t2v/data.txt`**: Point to the feature directory
 
 ```
-/path/to/sora_features,/path/to/sora_features/data.json
+/path/to/sora_features,/path/to/sora_features/data.jsonl
 ```
 
 2. **`feature_data.json`**: Set the dataset type to feature
@@ -181,7 +181,7 @@ After feature extraction is complete, update the training phase configuration:
 | Wan2.1 | `examples/wan2.1/feature_extract/` | model_t2v.json / model_i2v.json | get_wan_feature.py |
 | HunyuanVideo | `examples/hunyuanvideo/feature_extract/` | Model config | Independent extraction script |
 | CogVideoX | `examples/cogvideox/feature_extract/` | Model config | CogVideoX-specific VAE |
-| FLUX | `examples/flux/feature_extract/` | Model config | t2i-specific workflow |
+| FLUX | N/A (diffusers model, no feature extraction) | N/A | Uses raw data directly via Accelerate+DeepSpeed |
 | OpenSoraPlan | `examples/opensoraplan1.*/feature_extract/` | Model config | Independent extraction script |
 
 ## Troubleshooting

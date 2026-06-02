@@ -1,7 +1,7 @@
 # Model Delta Cards (vs. Wan2.1 baseline)
 
 Each card captures ONLY what differs from the standard Wan2.1 Megatron flow:
-`torchrun pretrain_sora.py` with `--mm-data/--mm-model/--mm-tool`, feature extraction via `get_sora_feature.py`, `WanConverter`, `CUDA_DEVICE_MAX_CONNECTIONS=1`.
+`torchrun pretrain_sora.py` with `--mm-data/--mm-model/--mm-tool`, feature extraction via `get_wan_feature.py`, `WanConverter`, `CUDA_DEVICE_MAX_CONNECTIONS=1`.
 
 ---
 

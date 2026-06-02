@@ -222,7 +222,7 @@ Ascend NPU devices require access to `/dev/davinci*` and related kernel interfac
 docker run --privileged ...
 ```
 
-Alternatively, map devices explicitly (see [ascend-docker](../../../ascend-docker/SKILL.md) for details).
+Alternatively, map devices explicitly (see [ascend-docker](../../ascend-docker/SKILL.md) for details).
 
 ### `MASTER_PORT` Conflicts
 

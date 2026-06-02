@@ -217,13 +217,10 @@
     },
     {
       "name": "mindspeed-mm-skills",
-      "description": "MindSpeed-MM 多模态大模型训练技能集，用于华为昇腾 NPU。覆盖环境搭建、权重转换（mm-convert）、多模态理解模型（VLM：Qwen2.5VL/InternVL/GLM4V）训练、多模态生成模型（Wan/HunyuanVideo/CogVideoX/FLUX）训练、端到端流水线。Use when deploying MindSpeed-MM multimodal training on Ascend NPU.",
+      "description": "MindSpeed-MM multimodal training on Ascend NPU. VLM understanding models (Qwen2.5VL, InternVL, GLM4V, DeepSeekVL2) and generative models (Wan, HunyuanVideo, CogVideoX, FLUX, OpenSoraPlan). Covers environment setup, weight conversion, data preparation, feature extraction, and distributed training.",
       "source": "./",
       "strict": false,
       "skills": [
-        "./mindspeed-mm/mindspeed-mm-pipeline",
-        "./mindspeed-mm/mindspeed-mm-env-setup",
-        "./mindspeed-mm/mindspeed-mm-weight-prep",
         "./mindspeed-mm/mindspeed-mm-vlm",
         "./mindspeed-mm/mindspeed-mm-generative"
       ]

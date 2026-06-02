@@ -188,21 +188,21 @@ mm-convert InternVLConverter mm_to_hf \
   --cfg.parallel_config.tp_size 2
 ```
 
-### InternVL2.5-8B (PP=2, TP=1)
+### InternVL2.5-4B (PP=2, TP=1)
 
 **hf_to_mm**:
 
 ```bash
 mm-convert InternVLConverter hf_to_mm \
-  --cfg.mm_dir "ckpt/mm_path/InternVL2_5-8B" \
-  --cfg.hf_config.hf_dir "ckpt/hf_path/InternVL2_5-8B" \
-  --cfg.parallel_config.llm_pp_layers [[16,16]] \
-  --cfg.parallel_config.vit_pp_layers [[25,0]] \
+  --cfg.mm_dir "ckpt/mm_path/InternVL2_5-4B" \
+  --cfg.hf_config.hf_dir "ckpt/hf_path/InternVL2_5-4B" \
+  --cfg.parallel_config.llm_pp_layers [[18,18]] \
+  --cfg.parallel_config.vit_pp_layers [[24,0]] \
   --cfg.parallel_config.tp_size 1
 ```
 
-- InternVL2.5-8B LLM has 32 layers total, evenly split across 2 stages
-- InternViT has 25 layers
+- InternVL2.5-4B LLM has 36 layers total, evenly split across 2 stages
+- InternViT has 24 layers
 
 ### Wan2.1-T2V-1.3B (Single Device)
 
@@ -272,14 +272,14 @@ mm-convert WanConverter hf_to_mm \
 
 | Model | LLM Layers | ViT Layers | PP=2 | PP=4 |
 |-------|------------|------------|------|------|
-| InternVL2.5-8B | 32 | 25 | `[[16,16]]` / `[[25,0]]` | `[[8,8,8,8]]` / `[[25,0,0,0]]` |
+| InternVL2.5-4B | 36 | 24 | `[[18,18]]` / `[[24,0]]` | `[[9,9,9,9]]` / `[[24,0,0,0]]` |
 | InternVL3-78B | 80 | 45 | `[[40,40]]` / `[[45,0]]` | `[[1,26,26,27]]` / `[[45,0,0,0]]` |
 
 ### Wan Series
 
 | Model | Transformer Layers | PP=1 | PP=2 | PP=4 |
 |-------|--------------------|------|------|------|
-| Wan2.1-T2V-1.3B | 24 | Not required | `[[12,12]]` | `[[6,6,6,6]]` |
+| Wan2.1-T2V-1.3B | 30 | Not required | `[[15,15]]` | `[[7,8,8,7]]` |
 | Wan2.1-T2V-14B | 40 | Not required | `[[20,20]]` | `[[10,10,10,10]]` |
 
 ## resplit Examples
